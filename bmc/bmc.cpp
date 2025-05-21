@@ -2,6 +2,9 @@
 #include <sstream>
 
 namespace bmc {
+  constexpr u16 VOXEL_TYPE_MASK = 0b1111111111011111;
+  constexpr u8 MIN_LEVEL = OPT_BOOST_LEVEL;
+  
   static u32 BMC_MEMORY_SPACE = 0;
   
   inline void initMemory() {
@@ -9,7 +12,7 @@ namespace bmc {
     do {
         u32 size = 1 << level;
         BMC_MEMORY_SPACE += size * size * size;
-    } while (--level >= OPT_MIN_LINEAR_LEVEL);
+    } while (--level >= MIN_LEVEL);
   }
 
   Tracer _ = {0};
@@ -31,7 +34,7 @@ namespace bmc {
     _c.x = (*buffer & 0x1F) * fade + (color & 0x1F) * (1.0f - fade);                 // r
     _c.y = ((*buffer >> 5) & 0x3F) * fade + ((color >> 5) & 0x3F) * (1.0f - fade);   // g
     _c.z = ((*buffer >> 11) & 0x1F) * fade + ((color >> 11) & 0x1F) * (1.0f - fade); // b
-    *buffer = (OPT_VOXEL_TYPE_MASK & ((_c.x) |
+    *buffer = (VOXEL_TYPE_MASK & ((_c.x) |
       ((_c.y) << 5) | ((_c.z)) << 11)) | type;
   }
   
@@ -105,19 +108,17 @@ namespace bmc {
   }
   
   static void fillSpace() {
+    constexpr float VOXEL_FADE = 0.1f;
     u32 i = OPT_SPACE_BUFFER_SIZE;
     while (i--) {
       _.bmc = space;
-      const u32 color = _.bmc->region[i];
+      const ucb color = _.bmc->region[i];
       if (color != 0) {
         _.iray = getCoordinates(i);
         while((_.bmc = _.bmc->child)) {
           const u32 _offset = evalOffset();
           if (_offset != ((u32)-1)) {
-            fadeVoxelTo(&_.bmc->region[_offset], color, OPT_VOXEL_FADE, 0);
-            #ifdef OPT_USE_VOXEL_FADE_DEPTH_ADJUSTER
-            fadeVoxelTo(&_.bmc->region[_offset], OPT_VOXEL_FADE_DEPTH_ADJUSTER_COLOR, (1.0f/7.0f) * _.bmc->level, 0);
-            #endif
+            fadeVoxelTo(&_.bmc->region[_offset], color, VOXEL_FADE, 0);
           }
         }
       }
@@ -135,7 +136,7 @@ namespace bmc {
       const u32 _offset = evalOffset();
       if (_offset != ((u32)-1)) {
         if (voxel->color > 0x0) {
-          _.bmc->region[_offset] = voxel->color & OPT_VOXEL_TYPE_MASK;
+          _.bmc->region[_offset] = voxel->color & VOXEL_TYPE_MASK;
         }
       }
     }
@@ -174,7 +175,7 @@ namespace bmc {
     return _c.x | (_c.y << 5) | (_c.z << 11);
   }
   
-  static v3 _origins[OPT_FRAME_BUFFER_SIZE] = {0};
+  static v3 _origins[OPT_FRAME_BUFFER_SIZE] __attribute__((aligned(16))) = {0};
   static inline void cacheRayOrigins() {
     v3* origin;
     constexpr u32 JSTEP = OPT_FRAME_SIZE * OPT_GRID_HEIGHT;
@@ -192,9 +193,6 @@ namespace bmc {
         origin->x = (((float)(offset & space->frame_sizeDigitsX)) - space->frame_half) - (OPT_V_DISPLACEMENT/2);
         origin->y = (((float)((offset & space->frame_sizeDigitsY) >> space->frame_yBitOffset)) - space->frame_half);
         origin->z = OPT_NEAR;
-        origin->x *= OPT_SCALE_ORIGIN * OPT_SCALE_X_ORIGIN;
-        origin->y *= OPT_SCALE_ORIGIN * OPT_SCALE_Y_ORIGIN;
-        origin->z *= OPT_SCALE_ORIGIN;
         #if OPT_USE_NEAR_ADJUSTER
         origin->z *= 1.0f - sqrtf(origin->x*origin->x + origin->y*origin->y) * OPT_NEAR_ADJUSTER;
         #endif
@@ -263,7 +261,7 @@ namespace bmc {
     return;
   }
   
-  static u8 _originToFind[OPT_NUMBER_OF_ORIGIN_TO_FIND] = {0};
+  static u8 _originToFind[OPT_NUMBER_OF_ORIGIN_TO_FIND] __attribute__((aligned(16))) = {0};
   static inline void originFound() {
     calcBase();
     static u8 i;
@@ -307,10 +305,10 @@ namespace bmc {
       _buffer[_.o[i]] = 0x0;
     }
     
-    _.rayLength = OPT_RAY_BASE;
+    _.rayLength = 0.0f;
     _.colorChecker = 0;
     _.found = 0;
-    _.level = OPT_BOOST_FOUND;
+    _.level = OPT_BOOST_LEVEL;
     _.bmc = stack[_.level];
     
     do {
@@ -452,8 +450,8 @@ namespace bmc {
       found = loadVoxelFrom(str.c_str());
       num++;
     } while(found);
-    if (OPT_MIN_LINEAR_LEVEL < MAX_SPACE_LEVEL) {
-      genSpace(MAX_SPACE_LEVEL - 1, OPT_MIN_LINEAR_LEVEL, space);
+    if (MIN_LEVEL < MAX_SPACE_LEVEL) {
+      genSpace(MAX_SPACE_LEVEL - 1, MIN_LEVEL, space);
       fillSpace();
     }
     _.space = space;

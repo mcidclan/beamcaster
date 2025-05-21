@@ -20,6 +20,8 @@ GLFWwindow* window;
 static float dstep = OPT_CAM_STEP;
 static ucb* frameBuffer = nullptr;
 
+#if OPT_USE_COLLIDE == 1
+static v3 _iposition;
 static u8 canMove(const v3* const p) {
   if (p->x < 0 || p->x >= OPT_SPACE_SIZE ||
       p->y < 0 || p->y >= OPT_SPACE_SIZE ||
@@ -34,6 +36,7 @@ static u8 canMove(const v3* const p) {
   color = bmc::_.space->region[offset];
   return (color & 1 << 5) || color == 0;
 }
+#endif
 
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
   bool pressed = (action == GLFW_PRESS || action == GLFW_REPEAT);
@@ -59,7 +62,6 @@ static inline void getView(ucb* const frame) {
   static float ay = OPT_POV_RANGE / 2.0f;
   static v3 position = {131.0f, 191.0f, 181.0f};
   static v3 _position = position;
-  static v3 _iposition;
 
   SpacePov pov = {0.0f, ax, ay, position};
 
@@ -67,6 +69,7 @@ static inline void getView(ucb* const frame) {
   if (inputState.circle) useTool = 0b001;
   if (inputState.square) useTool = 0b010;
 
+  #if OPT_USE_COLLIDE == 1
   if (inputState.triangle) {
     _iposition.x = position.x;
     _position.x = position.x + bmc::_.rayStep.x * dstep;
@@ -91,6 +94,21 @@ static inline void getView(ucb* const frame) {
   } else {
     bmc::_.collide = 1;
   }
+  #else
+  if (inputState.triangle) {
+    _position.x = position.x + bmc::_.rayStep.x * dstep;
+    _position.y = position.y + bmc::_.rayStep.y * dstep;
+    _position.z = position.z + bmc::_.rayStep.z * dstep;
+  }
+  
+  if (inputState.cross) {
+    _position.x = position.x - bmc::_.rayStep.x * dstep;
+    _position.y = position.y - bmc::_.rayStep.y * dstep;
+    _position.z = position.z - bmc::_.rayStep.z * dstep;
+  }
+  
+  position = _position;
+  #endif
 
   if (inputState.left) ay = (ay - 1) < 0 ? OPT_POV_RANGE - 1 : ay - 1;
   if (inputState.right) ay = (ay + 1) >= OPT_POV_RANGE ? 0 : ay + 1;
@@ -145,6 +163,26 @@ void checkProgramLink(GLuint program) {
   }
 }
 
+static void framebufferSizeCallback(GLFWwindow* const window, int width, int height) {
+  constexpr float scissorRatio = (float)(OPT_H_SCISSOR * OPT_GRID_HEIGHT) / (float)OPT_FRAME_SIZE;
+  
+  int x = 0, y = 0;
+  int w = width, h = height;
+  const float aspect = (float)width / (float)height;
+  
+  if (aspect > 1.0f) {
+    w = height;
+    x = (width - w) / 2;
+  } else {
+    h = width;
+    y = (height - h) / 2;
+  }
+  
+  glViewport(x, y, w, h);
+  const int scissorMargin = (int)(h * scissorRatio);
+  glScissor(x, y + scissorMargin, w, h - 2 * scissorMargin);
+}
+
 int main() {
   fprintf(stderr, "Starting...\n");
 
@@ -169,6 +207,8 @@ int main() {
   glfwSwapInterval(1);
   glfwSetKeyCallback(window, key_callback);
 
+  glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
+
   glewExperimental = GL_TRUE;
   if (glewInit() != GLEW_OK) {
     fprintf(stderr, "GLEW initialization failed\n");
@@ -186,7 +226,7 @@ int main() {
   bmc::init();
   pov::init();
 
-  glViewport(0, 0, OPT_FRAME_SIZE, OPT_FRAME_SIZE);
+  framebufferSizeCallback(window, OPT_FRAME_SIZE, OPT_FRAME_SIZE);
   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
   GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
@@ -211,8 +251,8 @@ int main() {
   GLuint textureID;
   glGenTextures(1, &textureID);
   glBindTexture(GL_TEXTURE_2D, textureID);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glPixelStorei(GL_UNPACK_ALIGNMENT, 2);
@@ -237,12 +277,15 @@ int main() {
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
+  glEnable(GL_SCISSOR_TEST);
+  
   glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
   glEnableVertexAttribArray(0);
   glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
   glEnableVertexAttribArray(1);
 
   auto lastTime = std::chrono::high_resolution_clock::now();
+  char title[50];
   int frameCount = 0, fps = 0;
 
   while (!glfwWindowShouldClose(window)) {
@@ -254,7 +297,6 @@ int main() {
       fps = frameCount;
       frameCount = 0;
       lastTime = currentTime;
-      char title[50];
       sprintf(title, "Beamcaster GLFW - FPS: %d", fps);
       glfwSetWindowTitle(window, title);
     }

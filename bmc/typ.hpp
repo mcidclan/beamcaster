@@ -48,11 +48,11 @@ struct SpacePov {
   float vstep;
   float hstep;
   v3 position;
-};
+} __attribute__((packed, aligned(MEM_ALIGN)));
 
 struct Pov {
   v4 q;
-};
+} __attribute__((packed, aligned(MEM_ALIGN)));
 
 struct BMC {
   float lstep;
@@ -75,7 +75,7 @@ struct BMC {
   u8 frame_yBitOffset;
   u8 frame_zBitOffset;
   char padding[1];
-} __attribute__((packed, aligned(4)));
+} __attribute__((packed, aligned(MEM_ALIGN)));
 
 struct Tracer {
   #if OPT_NUMBER_OF_RAY_PER_BEAM == 64
@@ -109,4 +109,4 @@ struct Tracer {
     char padding4[3];
   };
   #endif
-} __attribute__((packed, aligned(4)));
+} __attribute__((packed, aligned(MEM_ALIGN)));

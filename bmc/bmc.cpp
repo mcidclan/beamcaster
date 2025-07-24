@@ -192,10 +192,26 @@ namespace bmc {
         origin = &_origins[offset];
         origin->x = (((float)(offset & space->frame_sizeDigitsX)) - space->frame_half) - (OPT_V_DISPLACEMENT/2);
         origin->y = (((float)((offset & space->frame_sizeDigitsY) >> space->frame_yBitOffset)) - space->frame_half);
-        origin->z = OPT_NEAR;
-        #if OPT_USE_NEAR_ADJUSTER
-        origin->z *= 1.0f - sqrtf(origin->x*origin->x + origin->y*origin->y) * OPT_NEAR_ADJUSTER;
+        origin->z = OPT_NEAR_PLANE;
+
+        #if OPT_USE_LENS_DISTORTION
+        const float radius = sqrtf(origin->x*origin->x + origin->y*origin->y);
+        const float distortion = 1.0f - radius * OPT_LENS_DISTORTION_FACTOR;
+        origin->x *= distortion;
+        origin->y *= distortion;
+        origin->z *= distortion;
+        #elif OPT_USE_EDGE_DISTORTION
+        const float dist = sqrtf(origin->x*origin->x + origin->y*origin->y + origin->z*origin->z);
+        const v3 distortion = {
+          (origin->x / dist) * OPT_EDGE_DISTORTION_FACTOR,
+          (origin->y / dist) * OPT_EDGE_DISTORTION_FACTOR,
+          (origin->z / dist) * OPT_EDGE_DISTORTION_FACTOR
+        };
+        origin->x = origin->x * (1.0f - OPT_EDGE_DISTORTION_INTENSITY) + distortion.x * OPT_EDGE_DISTORTION_INTENSITY;
+        origin->y = origin->y * (1.0f - OPT_EDGE_DISTORTION_INTENSITY) + distortion.y * OPT_EDGE_DISTORTION_INTENSITY;
+        origin->z = origin->z * (1.0f - OPT_EDGE_DISTORTION_INTENSITY) + distortion.z * OPT_EDGE_DISTORTION_INTENSITY;
         #endif
+        
         i++;
       }
       j += OPT_FRAME_SIZE;
@@ -203,12 +219,11 @@ namespace bmc {
   }
   
   static inline void calcBase(void) {
-    _.rayBase = OPT_RAY_LENGTH_INFLUENCE * _.rayLength + OPT_RAY_PROJECTION_BASE;
+    _.rayBase = OPT_RAY_DEPTH_SCALE * _.rayLength + OPT_RAY_BASE;
     _.r.x = _.rayLength * _.rayStep.x + _.position.x;
     _.r.y = _.rayLength * _.rayStep.y + _.position.y;
     _.r.z = _.rayLength * _.rayStep.z + _.position.z;
   }
-  
   
   static inline void evalBeamStep() {
     calcBase();

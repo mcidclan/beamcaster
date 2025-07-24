@@ -2,7 +2,7 @@
 #pragma once
 
 #define OPT_SHOW_FPS                            1
-#define OPT_USE_COLLIDE                         1
+#define OPT_USE_COLLIDE                         0
 
 // Camera parameters
 #define OPT_POV_RANGE                           90
@@ -16,7 +16,7 @@
 
 // Frame size parameters
 #define OPT_HALF_FRAME_SIZE                     256
-constexpr unsigned int OPT_FRAME_SIZE        =  OPT_HALF_FRAME_SIZE * 2; // <<
+constexpr unsigned int OPT_FRAME_SIZE        =  OPT_HALF_FRAME_SIZE * 2;
 constexpr unsigned int OPT_FRAME_SIZE_X2     =  OPT_FRAME_SIZE * 2;
 constexpr unsigned int OPT_FRAME_SIZE_X3     =  OPT_FRAME_SIZE * 3;
 constexpr unsigned int OPT_FRAME_SIZE_X4     =  OPT_FRAME_SIZE * 4;
@@ -32,27 +32,33 @@ constexpr unsigned int OPT_FRAME_BUFFER_SIZE =  OPT_FRAME_SIZE * OPT_FRAME_SIZE;
 
 // Ray behavior
 #define OPT_MAX_RAY_DEPTH                       104.0f
-#define OPT_USE_NEAR_ADJUSTER                   1
-#define OPT_NEAR_ADJUSTER                       0.0033f
-#define OPT_NEAR                                96.0f
-#define OPT_RAY_LENGTH_INFLUENCE                0.0056f
-#define OPT_RAY_PROJECTION_BASE                 0.025f
+#define OPT_RAY_BASE                            0.05f
+#define OPT_RAY_DEPTH_SCALE                     0.004f
+#define OPT_NEAR_PLANE                          80.0f
+
+#define OPT_USE_EDGE_DISTORTION                 1
+#define OPT_EDGE_DISTORTION_INTENSITY           0.125f
+#define OPT_EDGE_DISTORTION_FACTOR              256.0f
+
+#define OPT_USE_LENS_DISTORTION                 0
+#define OPT_LENS_DISTORTION_FACTOR              0.001f
 #define OPT_RAY_COLOR_DEPTH_FACTOR              4.0f
 
 // Beam parameters 64 pixels
-// #define OPT_BEAM_MASK                           0xFFFFFFFFFFFFFFFF
-// #define OPT_COLOR_CHECKER_ENCODING(x)           ((u64)x)
-// #define OPT_NUMBER_OF_RAY_PER_BEAM              64
-// #define OPT_NUMBER_OF_ORIGIN_TO_FIND            4
-// #define OPT_ORIGIN_MASK 0b0000100000000000000000000000000110000000000000000000000000010000
+#define OPT_BEAM_MASK                           0xFFFFFFFFFFFFFFFF
+#define OPT_COLOR_CHECKER_ENCODING(x)           ((u64)x)
+#define OPT_NUMBER_OF_RAY_PER_BEAM              64
+#define OPT_NUMBER_OF_ORIGIN_TO_FIND            4
+#define OPT_ORIGIN_MASK 0b0000100000000000000000000000000110000000000000000000000000010000
 
 // Beam parameters 32 pixels
+/*
 #define OPT_BEAM_MASK                           0xFFFFFFFF
 #define OPT_COLOR_CHECKER_ENCODING(x)           ((u32)x)
 #define OPT_NUMBER_OF_RAY_PER_BEAM              32
 #define OPT_NUMBER_OF_ORIGIN_TO_FIND            4
 #define OPT_ORIGIN_MASK                         0b00001000000000011000000000010000
-
+*/
 #define OPT_BOOST_LEVEL                         7
 
 // 2d rendering

@@ -46,7 +46,7 @@ $(PATHOBJS)%.o: ../bmc/%.cpp
 	$(CC) $(INCLUDES) -o $@ -c $< $(CXXFLAGS)
 
 clean:
-	rm -f $(BINOUT)* $(PATHOBJS)*.o
+	rm -f $(BINOUT)beamcaster $(PATHOBJS)*.o
 
 rebuild: clean all
 

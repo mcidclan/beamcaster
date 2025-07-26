@@ -190,26 +190,34 @@ namespace bmc {
       while (i < V_SCISSOR_END) {
         offset = i + j;
         origin = &_origins[offset];
-        origin->x = (((float)(offset & space->frame_sizeDigitsX)) - space->frame_half) - (OPT_V_DISPLACEMENT/2);
-        origin->y = (((float)((offset & space->frame_sizeDigitsY) >> space->frame_yBitOffset)) - space->frame_half);
+        origin->x = (((float)(offset & space->frame_sizeDigitsX)) - space->frame_half) * OPT_FOV_FACTOR - (OPT_V_DISPLACEMENT/2);
+        origin->y = (((float)((offset & space->frame_sizeDigitsY) >> space->frame_yBitOffset)) - space->frame_half) * OPT_FOV_FACTOR;
         origin->z = OPT_NEAR_PLANE;
 
         #if OPT_USE_LENS_DISTORTION
         const float radius = sqrtf(origin->x*origin->x + origin->y*origin->y);
-        const float distortion = 1.0f - radius * OPT_LENS_DISTORTION_FACTOR;
+        const float distortion = fmaxf(0.0f, 1.0f - radius * OPT_LENS_DISTORTION_FACTOR);
         origin->x *= distortion;
         origin->y *= distortion;
-        origin->z *= distortion;
-        #elif OPT_USE_EDGE_DISTORTION
-        const float dist = sqrtf(origin->x*origin->x + origin->y*origin->y + origin->z*origin->z);
-        const v3 distortion = {
-          (origin->x / dist) * OPT_EDGE_DISTORTION_FACTOR,
-          (origin->y / dist) * OPT_EDGE_DISTORTION_FACTOR,
-          (origin->z / dist) * OPT_EDGE_DISTORTION_FACTOR
-        };
-        origin->x = origin->x * (1.0f - OPT_EDGE_DISTORTION_INTENSITY) + distortion.x * OPT_EDGE_DISTORTION_INTENSITY;
-        origin->y = origin->y * (1.0f - OPT_EDGE_DISTORTION_INTENSITY) + distortion.y * OPT_EDGE_DISTORTION_INTENSITY;
-        origin->z = origin->z * (1.0f - OPT_EDGE_DISTORTION_INTENSITY) + distortion.z * OPT_EDGE_DISTORTION_INTENSITY;
+        #elif OPT_USE_SPHERICAL_DISTORTION
+        const float dist = sqrtf(origin->x*origin->x + origin->y*origin->y + origin->z*origin->z);        
+        if (dist > 0.001f) {
+            const float distortion_factor = 1.0f + (dist * OPT_SPHERICAL_DISTORTION_FACTOR);
+            const v3 distortion = {
+                (origin->x / dist) * distortion_factor,
+                (origin->y / dist) * distortion_factor,
+                (origin->z / dist) * distortion_factor
+            };
+            origin->x = origin->x * (1.0f - OPT_SPHERICAL_DISTORTION_INTENSITY) + distortion.x * OPT_SPHERICAL_DISTORTION_INTENSITY;
+            origin->y = origin->y * (1.0f - OPT_SPHERICAL_DISTORTION_INTENSITY) + distortion.y * OPT_SPHERICAL_DISTORTION_INTENSITY;
+            origin->z = origin->z * (1.0f - OPT_SPHERICAL_DISTORTION_INTENSITY) + distortion.z * OPT_SPHERICAL_DISTORTION_INTENSITY;
+        }
+        #endif
+        
+        #if OPT_USE_BARREL_DISTORTION
+        const float distance_from_center = sqrtf(origin->x*origin->x + origin->y*origin->y);
+        const float depth_factor = 1.0f - distance_from_center * OPT_BARREL_DISTORTION_FACTOR;
+        origin->z *= depth_factor;
         #endif
         
         i++;
@@ -219,7 +227,7 @@ namespace bmc {
   }
   
   static inline void calcBase(void) {
-    _.rayBase = OPT_RAY_DEPTH_SCALE * _.rayLength + OPT_RAY_BASE;
+    _.rayBase = OPT_RAY_DEPTH_SCALE * sqrtf(_.rayLength*_.rayLength*_.rayLength) + OPT_RAY_BASE; // powf(x, 1.5f)
     _.r.x = _.rayLength * _.rayStep.x + _.position.x;
     _.r.y = _.rayLength * _.rayStep.y + _.position.y;
     _.r.z = _.rayLength * _.rayStep.z + _.position.z;
@@ -252,10 +260,15 @@ namespace bmc {
         _.ray.z < 0.0f || _.ray.z >= OPT_SPACE_SIZE) {
         continue;
       }
-      _.iray.x = (u16)_.ray.x; 
-      _.iray.y = (u16)_.ray.y; 
-      _.iray.z = (u16)_.ray.z;
-
+      /*
+      _.iray.x = static_cast<u16>(_.ray.x + (mth::randInRange(100) - 50) * 0.01f); 
+      _.iray.y = static_cast<u16>(_.ray.y + (mth::randInRange(100) - 50) * 0.01f); 
+      _.iray.z = static_cast<u16>(_.ray.z + (mth::randInRange(100) - 50) * 0.01f);
+      */
+      _.iray.x = static_cast<u16>(_.ray.x); 
+      _.iray.y = static_cast<u16>(_.ray.y); 
+      _.iray.z = static_cast<u16>(_.ray.z);
+      
       _offset = (_.iray.x >> _.bmc->rlevel) |
         ((_.iray.y >> _.bmc->rlevel) << _.bmc->yBitOffset) |
         ((_.iray.z >> _.bmc->rlevel) << _.bmc->zBitOffset);
@@ -275,7 +288,7 @@ namespace bmc {
     }
     return;
   }
-  
+   
   static u8 _originToFind[OPT_NUMBER_OF_ORIGIN_TO_FIND] __attribute__((aligned(16))) = {0};
   static inline void originFound() {
     calcBase();
@@ -302,9 +315,14 @@ namespace bmc {
         ((_.iray.z >> _.bmc->rlevel) << _.bmc->zBitOffset);
         
       if(_.bmc->region[_offset]) {
-        _.found = 1;
+        if (_.level == MAX_SPACE_LEVEL - 1) {
+          _.found = 1;
+          _.level = MAX_SPACE_LEVEL;
+        }
+        else {
+          _.level++;
+        }
         _.rayLength -= _.bmc->lstep;
-        _.level = MAX_SPACE_LEVEL;
         _.bmc = stack[_.level];
         return;
       }

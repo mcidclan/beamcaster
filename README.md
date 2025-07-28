@@ -5,12 +5,18 @@ This experimental project implements a voxel raycasting technique using a beam-b
 - The Beam Caster groups rays into beams to improve efficiency
 - Witness rays are used within each block (defined with a binary mask) to detect voxels, minimizing check counts
 - If no voxels are found, the algorithm skips the full 8x8 block ahead to accelerate traversal
-- Once a voxel is detected, it switches to high-precision mode, scanning unit-sized voxels step by step
+- Once a voxel is detected, it switches to higher precision, until reaching and scanning the unit-sized voxels step by step
 
-## Voxel Editor
-To create voxel regions for this project, you can use the following editor: https://github.com/mcidclan/voxelander-voxel-editor
+## Loading Voxel Regions  
 
-## File Format
+### Voxel Editor  
+To create voxel regions for this project, you can use the following editor:  
+[https://github.com/mcidclan/voxelander-voxel-editor](https://github.com/mcidclan/voxelander-voxel-editor)
+
+### Blender Script  
+Alternatively, you can use the Blender 3.x.x Python script available in the `tool` folder to export voxel regions from a voxelized mesh in Blender.
+
+## File Format  
 You can export multiple voxel files to be loaded by the renderer. Make sure to name them sequentially:
 ```
 object_0.bin

@@ -12,8 +12,8 @@
 #include "../bmc/bmc.hpp"
 
 struct InputState {
-  bool up, down, left, right;
-  bool triangle, cross, circle, square;
+  bool forward, backward, left, right;
+  bool up, down;
 } inputState;
 
 GLFWwindow* window;
@@ -40,37 +40,29 @@ static u8 canMove(const v3* const p) {
 
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
   bool pressed = (action == GLFW_PRESS || action == GLFW_REPEAT);
-
+  
   if (key == GLFW_KEY_ESCAPE && pressed)
     glfwSetWindowShouldClose(window, GLFW_TRUE);
-
+  
   if (key == GLFW_KEY_UP) inputState.up = pressed;
   if (key == GLFW_KEY_DOWN) inputState.down = pressed;
   if (key == GLFW_KEY_LEFT) inputState.left = pressed;
   if (key == GLFW_KEY_RIGHT) inputState.right = pressed;
-
-  if (key == GLFW_KEY_W) inputState.triangle = pressed;
-  if (key == GLFW_KEY_S) inputState.cross = pressed;
-
-  if (key == GLFW_KEY_D) inputState.circle = pressed;
-  if (key == GLFW_KEY_A) inputState.square = pressed;
+  
+  if (key == GLFW_KEY_W) inputState.forward = pressed;
+  if (key == GLFW_KEY_S) inputState.backward = pressed;
 }
 
 static inline void getView(ucb* const frame) {
-  static u8 useTool = 0;
-  static float ax = OPT_POV_RANGE / 20.0f;
-  static float ay = OPT_POV_RANGE / 2.0f;
-  static v3 position = {131.0f, 191.0f, 181.0f};
-  static v3 _position = position;
+  static v3 position = OPT_DEFAULT_CAM_POSITION;
+  static float ax = OPT_DEFAULT_CAM_ANGLE_X;
+  static float ay = OPT_DEFAULT_CAM_ANGLE_Y;
 
   SpacePov pov = {0.0f, ax, ay, position};
 
-  useTool = 0;
-  if (inputState.circle) useTool = 0b001;
-  if (inputState.square) useTool = 0b010;
-
   #if OPT_USE_COLLIDE == 1
-  if (inputState.triangle) {
+  static v3 _position = position;
+  if (inputState.forward) {
     _iposition.x = position.x;
     _position.x = position.x + bmc::_.rayStep.x * dstep;
     _iposition.y = position.y;
@@ -79,7 +71,7 @@ static inline void getView(ucb* const frame) {
     _position.z = position.z + bmc::_.rayStep.z * dstep;
   }
 
-  if (inputState.cross) {
+  if (inputState.backward) {
     _iposition.x = position.x;
     _position.x = position.x - bmc::_.rayStep.x * dstep;
     _iposition.y = position.y;
@@ -95,19 +87,17 @@ static inline void getView(ucb* const frame) {
     bmc::_.collide = 1;
   }
   #else
-  if (inputState.triangle) {
-    _position.x = position.x + bmc::_.rayStep.x * dstep;
-    _position.y = position.y + bmc::_.rayStep.y * dstep;
-    _position.z = position.z + bmc::_.rayStep.z * dstep;
+  if (inputState.forward) {
+    position.x += bmc::_.rayStep.x * dstep;
+    position.y += bmc::_.rayStep.y * dstep;
+    position.z += bmc::_.rayStep.z * dstep;
   }
   
-  if (inputState.cross) {
-    _position.x = position.x - bmc::_.rayStep.x * dstep;
-    _position.y = position.y - bmc::_.rayStep.y * dstep;
-    _position.z = position.z - bmc::_.rayStep.z * dstep;
+  if (inputState.backward) {
+    position.x -= bmc::_.rayStep.x * dstep;
+    position.y -= bmc::_.rayStep.y * dstep;
+    position.z -= bmc::_.rayStep.z * dstep;
   }
-  
-  position = _position;
   #endif
 
   if (inputState.left) ay = (ay - 1) < 0 ? OPT_POV_RANGE - 1 : ay - 1;
@@ -115,10 +105,7 @@ static inline void getView(ucb* const frame) {
   if (inputState.down) ax = (ax - 1) < 0 ? OPT_POV_RANGE - 1 : ax - 1;
   if (inputState.up) ax = (ax + 1) >= OPT_POV_RANGE ? 0 : ax + 1;
 
-  bmc::_.cameraUsed = inputState.cross || inputState.triangle || inputState.left ||
-                      inputState.right || inputState.up || inputState.down;
-
-  bmc::getRendering(frame, &pov, useTool);
+  bmc::getRendering(frame, &pov);
 }
 
 const char* vertexShaderSource = R"(

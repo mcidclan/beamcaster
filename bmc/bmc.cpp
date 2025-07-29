@@ -359,7 +359,7 @@ namespace bmc {
   }
 
   
-  void getRendering(ucb* const buffer, SpacePov* const pov, const u8 useTool = 0) {
+  void getRendering(ucb* const buffer, SpacePov* const pov) {
     _buffer = buffer;
 
     _.position = pov->position;

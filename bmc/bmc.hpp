@@ -5,6 +5,6 @@ namespace bmc {
   void init();
   void initExtra();
   void updateParameters();
-  void getRendering(ucb* const, SpacePov* const, const u8);
+  void getRendering(ucb* const, SpacePov* const);
   void applyFilters(ucb* const, ucb* const);
 }

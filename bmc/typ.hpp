@@ -100,13 +100,10 @@ struct Tracer {
     Vec3<u16> iray;
     u8 level;
     u8 found;
-    u8 cameraUsed;
-    char padding3[3];
-  };
+  } __attribute__((packed, aligned(MEM_ALIGN)));
   #if OPT_USE_COLLIDE
   struct {
     u8 collide;
-    char padding4[3];
-  };
+  } __attribute__((packed, aligned(MEM_ALIGN)));
   #endif
 } __attribute__((packed, aligned(MEM_ALIGN)));

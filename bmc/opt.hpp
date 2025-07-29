@@ -7,6 +7,10 @@
 // Camera parameters
 #define OPT_POV_RANGE                           90
 #define OPT_CAM_STEP                            1.0f
+#define OPT_DEFAULT_CAM_POSITION                {131.0f, 191.0f, 181.0f}
+constexpr float OPT_DEFAULT_CAM_ANGLE_X         = OPT_POV_RANGE / 20.0f;
+constexpr float OPT_DEFAULT_CAM_ANGLE_Y         = OPT_POV_RANGE / 2.0f;
+
 
 // Space size parameters
 #define OPT_SPACE_SIZE                          256

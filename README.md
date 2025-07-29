@@ -1,5 +1,5 @@
 ## BeamCaster Overview  
-This experimental project implements a voxel raycasting technique using a beam-based acceleration. Instead of casting a ray for every pixel, it processes the scene in 8x8 pixel blocks and dynamically adjusts traversal speed and precision after each hit.
+This experimental project implements a CPU-Side voxel raycasting technique using a beam-based acceleration method. Instead of casting a ray for every pixel, it processes the scene in 8x8 pixel blocks and dynamically adjusts traversal speed and precision after each hit.
 
 A `Beam` here consists of two parts: a coherent group of rays (the "witness rays") that drives the global advancement within the 8×8×LOD block, and a second part in which the full set of rays for the 8×8 block is advanced to scan the space, starting from the point where the witness beam stopped.
 
@@ -42,5 +42,21 @@ object\_1.bin
 object\_2.bin
 etc.
 ```
+
+## Configuration
+
+You can adjust and experiment with the Beamcaster configuration using the `opt.h` file located in the `/bmc` folder.
+
+This file centralizes key parameters such as:
+
+- **Rendering options**: toggle FPS display, fog effects, and visual distortions (barrel, spherical, lens).
+- **Camera settings**: field of view, step size, near plane distance.
+- **Space and frame size**: dimensions, buffer sizes, and slice configurations.
+- **Raycasting behavior**: ray depth, base scale, color depth factor, and FOV factor.
+- **Beam parameters**: beam size, bitmask, origin detection, and boost level.
+- **2D rendering layout**: grid size, scissor bounds, and vertical displacement.
+
+You can change these constants to explore different visual or performance profiles.
+
 
 *m-c/d*

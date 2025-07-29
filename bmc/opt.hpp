@@ -8,8 +8,8 @@
 #define OPT_POV_RANGE                           90
 #define OPT_CAM_STEP                            1.0f
 #define OPT_DEFAULT_CAM_POSITION                {131.0f, 191.0f, 181.0f}
-constexpr float OPT_DEFAULT_CAM_ANGLE_X         = OPT_POV_RANGE / 20.0f;
-constexpr float OPT_DEFAULT_CAM_ANGLE_Y         = OPT_POV_RANGE / 2.0f;
+constexpr float OPT_DEFAULT_CAM_ANGLE_X      =  OPT_POV_RANGE / 20.0f;
+constexpr float OPT_DEFAULT_CAM_ANGLE_Y      =  OPT_POV_RANGE / 2.0f;
 
 
 // Space size parameters
@@ -35,23 +35,30 @@ constexpr unsigned int OPT_FRAME_BUFFER_SIZE =  OPT_FRAME_SIZE * OPT_FRAME_SIZE;
 #define OPT_FOG_BLUE_INTENSITY                  42.0f
 
 // Ray behavior
+#define OPT_RAY_STEP_FACTOR                     0.7f
 #define OPT_MAX_RAY_DEPTH                       120.0f
-#define OPT_RAY_BASE                            0.2f
+#define OPT_RAY_BASE                            0.01f
+#define OPT_RAY_BASE_CUT                        10.0f
 #define OPT_RAY_DEPTH_SCALE                     0.0004f
-#define OPT_FOV_FACTOR                          1.0f
+#define OPT_ORIGIN_SCALE                        1.0f
 #define OPT_NEAR_PLANE                          60.0f
 
 #define OPT_USE_BARREL_DISTORTION               1
-#define OPT_BARREL_DISTORTION_FACTOR            0.006f
+#define OPT_BARREL_DISTORTION_FACTOR            0.003f
 
 #define OPT_USE_SPHERICAL_DISTORTION            1
-#define OPT_SPHERICAL_DISTORTION_INTENSITY      0.0006f
+#define OPT_SPHERICAL_DISTORTION_INTENSITY      0.0005f
 #define OPT_SPHERICAL_DISTORTION_FACTOR         256.0f
 
-#define OPT_USE_LENS_DISTORTION                 1
+#define OPT_USE_LENS_DISTORTION                 0
 #define OPT_LENS_DISTORTION_FACTOR              0.001f
 
 #define OPT_RAY_COLOR_DEPTH_FACTOR              4.0f
+
+// Voxel limit
+#define OPT_USE_VOXEL_SPHERICAL_LIMIT                   0
+#define OPT_VOXEL_SPHERICAL_LIMIT_VALUE                 0.6f
+constexpr float OPT_VOXEL_SPHERICAL_LIMITS_RAY_LENGTH = OPT_MAX_RAY_DEPTH / 4.0f;
 
 // Beam parameters 64 pixels
 #define OPT_BEAM_MASK                           0xFFFFFFFFFFFFFFFF

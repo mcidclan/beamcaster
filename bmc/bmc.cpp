@@ -97,7 +97,7 @@ namespace bmc {
       bmc->sizeDigitsY = (bmc->size - 1) << bmc->yBitOffset;
       bmc->sizeDigitsZ = (bmc->size - 1) << bmc->zBitOffset;
       bmc->rlevel = MAX_SPACE_LEVEL - level;
-      bmc->lstep = fmax(1.0f, (float)(1 << bmc->rlevel) * 0.5f);
+      bmc->lstep = fmax(OPT_RAY_STEP_FACTOR, (float)(1 << bmc->rlevel) * OPT_RAY_STEP_FACTOR);      
       
       const u32 count = bmc->size * bmc->size * bmc->size; 
       bmc->region = &(((ucb*)_bmc_memory_space)[_count]);
@@ -190,17 +190,17 @@ namespace bmc {
       while (i < V_SCISSOR_END) {
         offset = i + j;
         origin = &_origins[offset];
-        origin->x = (((float)(offset & space->frame_sizeDigitsX)) - space->frame_half) * OPT_FOV_FACTOR - (OPT_V_DISPLACEMENT/2);
-        origin->y = (((float)((offset & space->frame_sizeDigitsY) >> space->frame_yBitOffset)) - space->frame_half) * OPT_FOV_FACTOR;
+        origin->x = (((float)(offset & space->frame_sizeDigitsX)) - space->frame_half) * OPT_ORIGIN_SCALE - (OPT_V_DISPLACEMENT/2);
+        origin->y = (((float)((offset & space->frame_sizeDigitsY) >> space->frame_yBitOffset)) - space->frame_half) * OPT_ORIGIN_SCALE;
         origin->z = OPT_NEAR_PLANE;
 
-        #if OPT_USE_LENS_DISTORTION
+        #if OPT_USE_LENS_DISTORTION == 1
         const float radius = sqrtf(origin->x*origin->x + origin->y*origin->y);
         const float distortion = fmaxf(0.0f, 1.0f - radius * OPT_LENS_DISTORTION_FACTOR);
         origin->x *= distortion;
         origin->y *= distortion;
-        #elif OPT_USE_SPHERICAL_DISTORTION
-        const float dist = sqrtf(origin->x*origin->x + origin->y*origin->y + origin->z*origin->z);        
+        #elif OPT_USE_SPHERICAL_DISTORTION == 1
+        const float dist = sqrtf(origin->x*origin->x + origin->y*origin->y + origin->z*origin->z);
         if (dist > 0.001f) {
             const float distortion_factor = 1.0f + (dist * OPT_SPHERICAL_DISTORTION_FACTOR);
             const v3 distortion = {
@@ -214,7 +214,7 @@ namespace bmc {
         }
         #endif
         
-        #if OPT_USE_BARREL_DISTORTION
+        #if OPT_USE_BARREL_DISTORTION == 1
         const float distance_from_center = sqrtf(origin->x*origin->x + origin->y*origin->y);
         const float depth_factor = 1.0f - distance_from_center * OPT_BARREL_DISTORTION_FACTOR;
         origin->z *= depth_factor;
@@ -260,15 +260,23 @@ namespace bmc {
         _.ray.z < 0.0f || _.ray.z >= OPT_SPACE_SIZE) {
         continue;
       }
-      /*
-      _.iray.x = static_cast<u16>(_.ray.x + (mth::randInRange(100) - 50) * 0.01f); 
-      _.iray.y = static_cast<u16>(_.ray.y + (mth::randInRange(100) - 50) * 0.01f); 
-      _.iray.z = static_cast<u16>(_.ray.z + (mth::randInRange(100) - 50) * 0.01f);
-      */
+      
       _.iray.x = static_cast<u16>(_.ray.x); 
       _.iray.y = static_cast<u16>(_.ray.y); 
       _.iray.z = static_cast<u16>(_.ray.z);
       
+      #if OPT_USE_VOXEL_SPHERICAL_LIMIT
+      if (_.rayLength < OPT_VOXEL_SPHERICAL_LIMITS_RAY_LENGTH) {
+        const float x = (_.ray.x - _.iray.x - 0.5f);
+        const float y = (_.ray.y - _.iray.y - 0.5f);
+        const float z = (_.ray.z - _.iray.z - 0.5f);
+        const float f = sqrtf(x * x + y * y + z * z);
+        if (f > OPT_VOXEL_SPHERICAL_LIMIT_VALUE) {
+          continue;
+        }
+      }
+      #endif
+        
       _offset = (_.iray.x >> _.bmc->rlevel) |
         ((_.iray.y >> _.bmc->rlevel) << _.bmc->yBitOffset) |
         ((_.iray.z >> _.bmc->rlevel) << _.bmc->zBitOffset);
@@ -317,11 +325,8 @@ namespace bmc {
       if(_.bmc->region[_offset]) {
         if (_.level == MAX_SPACE_LEVEL - 1) {
           _.found = 1;
-          _.level = MAX_SPACE_LEVEL;
         }
-        else {
-          _.level++;
-        }
+        _.level++;
         _.rayLength -= _.bmc->lstep;
         _.bmc = stack[_.level];
         return;
@@ -338,7 +343,7 @@ namespace bmc {
       _buffer[_.o[i]] = 0x0;
     }
     
-    _.rayLength = 0.0f;
+    _.rayLength = OPT_RAY_BASE_CUT;
     _.colorChecker = 0;
     _.found = 0;
     _.level = OPT_BOOST_LEVEL;

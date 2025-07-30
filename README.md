@@ -18,7 +18,6 @@ The algorithm operates in three main phases:
 2. **LOD switching phase after the first hit**  
    When a witness ray detects a voxel, the algorithm switches to a higher level of detail.  
    It rolls back slightly and resumes the beam's progression at the new LOD.  
-   (Implementing DDA on coarser levels may further improve performance)
 
 3. **Scanning precision at the finest level**  
    When a unit-sized voxel is hit, the algorithm switches to unit precision mode.  
@@ -50,10 +49,10 @@ You can adjust and experiment with the Beamcaster configuration using the `opt.h
 This file centralizes key parameters such as:
 
 - **Rendering options**: toggle FPS display, fog effects, and visual distortions (barrel, spherical, lens).
-- **Camera settings**: field of view, step size, near plane distance.
-- **Space and frame size**: dimensions, buffer sizes, and slice configurations.
-- **Raycasting behavior**: ray depth, base scale, color depth factor, and FOV factor.
-- **Beam parameters**: beam size, bitmask, origin detection, and boost level.
+- **Camera settings**: origin scale, step size, near plane distance, default position and angles.
+- **Space and frame size**: 3D space dimensions, buffer sizes, and frame scaling factors.
+- **Raycasting behavior**: ray step factor, min step, max depth, base cut, and color depth factor.
+- **Beam parameters**: ray count per beam, bitmask, origin detection, and boost level.
 - **2D rendering layout**: grid size, scissor bounds, and vertical displacement.
 
 You can change these constants to explore different visual or performance profiles.

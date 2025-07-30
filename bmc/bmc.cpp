@@ -19,7 +19,7 @@ namespace bmc {
   
   static ucb* _bmc_memory_space = NULL;
   static inline void fadeToColor(ucb* const buffer, const ucb a, const ucb b, const float fade) {
-    static Vec3<char> _c;
+    Vec3<char> _c;
     _c.x = (a & 0x1F) * fade + (b & 0x1F) * (1.0f - fade);                 // r
     _c.y = ((a >> 5) & 0x3F) * fade + ((b >> 5) & 0x3F) * (1.0f - fade);   // g
     _c.z = ((a >> 11) & 0x1F) * fade + ((b >> 11) & 0x1F) * (1.0f - fade); // b
@@ -27,7 +27,7 @@ namespace bmc {
   }
   
   static inline void fadeVoxelTo(ucb* const buffer, const ucb color, float fade, const ucb type) {
-    static Vec3<char> _c;
+    Vec3<char> _c;
     if(*buffer & (1 << 5)) {
       return;
     }
@@ -143,8 +143,8 @@ namespace bmc {
   }
   
   static inline ucb getDepthColor(const ucb _color) {
-    static float _darkness;
-    static Vec3<char> _c;
+    float _darkness;
+    Vec3<char> _c;
     if (_.rayLength < RAY_COLOR_DEPTH_START) {
       return _color;
     } else {
@@ -152,8 +152,7 @@ namespace bmc {
       _darkness = _darkness * _darkness;
     }
     #if OPT_USE_FOG == 1
-    static float fog;
-    fog = ((0.5f - _darkness));
+    float fog = ((0.5f - _darkness));
     fog = (0.25f - (fog * fog));
     _c.x = _darkness * (_color & 0x1F) + fog * OPT_FOG_RED_INTENSITY;
     _c.y = _darkness * ((_color >> 5) & 0x3F) + fog * OPT_FOG_GREEN_INTENSITY;
@@ -236,11 +235,10 @@ namespace bmc {
   static inline void evalBeamStep() {
     calcBase();
     
-    static u8 i;
-    static u32 _offset;
-    static ucb _color;
+    u32 _offset;
+    ucb _color;
     
-    i = OPT_NUMBER_OF_RAY_PER_BEAM;
+    u8 i = OPT_NUMBER_OF_RAY_PER_BEAM;
     while(i--) {
       if (
         #if OPT_BEAM_MASK != 0xFFFFFFFF && OPT_BEAM_MASK != 0xFFFFFFFFFFFFFFFF
@@ -300,9 +298,8 @@ namespace bmc {
   static u8 _originToFind[OPT_NUMBER_OF_ORIGIN_TO_FIND] __attribute__((aligned(16))) = {0};
   static inline void originFound() {
     calcBase();
-    static u8 i;
-    static u32 _offset;
-    i = OPT_NUMBER_OF_ORIGIN_TO_FIND;
+    u32 _offset;
+    u8 i = OPT_NUMBER_OF_ORIGIN_TO_FIND;
     while (i--) {
       _.ray.x = _.r.x + _.rayBase * _.coords[_originToFind[i]].x;
       _.ray.y = _.r.y + _.rayBase * _.coords[_originToFind[i]].y;
@@ -336,8 +333,7 @@ namespace bmc {
   }
   
   static inline void beam() {
-    static u8 i;
-    i = OPT_NUMBER_OF_RAY_PER_BEAM;
+    u8 i = OPT_NUMBER_OF_RAY_PER_BEAM;
     while (i--) {
       _.coords[i] = mth::getSandwichProduct<v4>(&_origins[_.o[i]], &_.pov->q);
       _buffer[_.o[i]] = 0x0;

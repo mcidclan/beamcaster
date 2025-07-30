@@ -36,18 +36,19 @@ constexpr unsigned int OPT_FRAME_BUFFER_SIZE =  OPT_FRAME_SIZE * OPT_FRAME_SIZE;
 
 // Ray behavior
 #define OPT_RAY_STEP_FACTOR                     0.7f
-#define OPT_MAX_RAY_DEPTH                       120.0f
-#define OPT_RAY_BASE                            0.01f
-#define OPT_RAY_BASE_CUT                        10.0f
-#define OPT_RAY_DEPTH_SCALE                     0.0004f
+#define OPT_RAY_MIN_STEP                        1.0f
+#define OPT_RAY_MAX_DEPTH                       120.0f
+#define OPT_RAY_BASE                            0.0f /*0.00025f*/
+#define OPT_RAY_BASE_CUT                        30.0f /*10.0f*/
+#define OPT_RAY_DEPTH_SCALE                     0.00001f
 #define OPT_ORIGIN_SCALE                        1.0f
 #define OPT_NEAR_PLANE                          60.0f
 
 #define OPT_USE_BARREL_DISTORTION               1
-#define OPT_BARREL_DISTORTION_FACTOR            0.003f
+#define OPT_BARREL_DISTORTION_FACTOR            0.0001f
 
 #define OPT_USE_SPHERICAL_DISTORTION            1
-#define OPT_SPHERICAL_DISTORTION_INTENSITY      0.0005f
+#define OPT_SPHERICAL_DISTORTION_INTENSITY      0.15f
 #define OPT_SPHERICAL_DISTORTION_FACTOR         256.0f
 
 #define OPT_USE_LENS_DISTORTION                 0
@@ -58,7 +59,7 @@ constexpr unsigned int OPT_FRAME_BUFFER_SIZE =  OPT_FRAME_SIZE * OPT_FRAME_SIZE;
 // Voxel limit
 #define OPT_USE_VOXEL_SPHERICAL_LIMIT                   0
 #define OPT_VOXEL_SPHERICAL_LIMIT_VALUE                 0.6f
-constexpr float OPT_VOXEL_SPHERICAL_LIMITS_RAY_LENGTH = OPT_MAX_RAY_DEPTH / 4.0f;
+constexpr float OPT_VOXEL_SPHERICAL_LIMITS_RAY_LENGTH = OPT_RAY_MAX_DEPTH / 4.0f;
 
 // Beam parameters 64 pixels
 #define OPT_BEAM_MASK                           0xFFFFFFFFFFFFFFFF
@@ -77,12 +78,12 @@ constexpr float OPT_VOXEL_SPHERICAL_LIMITS_RAY_LENGTH = OPT_MAX_RAY_DEPTH / 4.0f
 #define OPT_NUMBER_OF_ORIGIN_TO_FIND            4
 #define OPT_ORIGIN_MASK                         0b00001000000000011000000000010000
 */
-#define OPT_BOOST_LEVEL                         5
+#define OPT_BOOST_LEVEL                         4
 
 // 2d rendering
 #define OPT_GRID_WIDTH                          8
 #define OPT_GRID_HEIGHT                         8
-#define OPT_H_SCISSOR                           16
+#define OPT_H_SCISSOR                           12
 #define OPT_V_SCISSOR_START                     0 // 4
 #define OPT_V_SCISSOR_END                       0 // 4
 #define OPT_V_DISPLACEMENT                      0 // -32

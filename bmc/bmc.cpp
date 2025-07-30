@@ -97,8 +97,8 @@ namespace bmc {
       bmc->sizeDigitsY = (bmc->size - 1) << bmc->yBitOffset;
       bmc->sizeDigitsZ = (bmc->size - 1) << bmc->zBitOffset;
       bmc->rlevel = MAX_SPACE_LEVEL - level;
-      bmc->lstep = fmax(OPT_RAY_STEP_FACTOR, (float)(1 << bmc->rlevel) * OPT_RAY_STEP_FACTOR);      
-      
+      bmc->lstep = sqrtf(2.0f * (float)(1 << bmc->rlevel)) * OPT_RAY_STEP_FACTOR;
+      bmc->lstep = fmaxf(OPT_RAY_MIN_STEP, bmc->lstep);
       const u32 count = bmc->size * bmc->size * bmc->size; 
       bmc->region = &(((ucb*)_bmc_memory_space)[_count]);
       _count += count;
@@ -243,7 +243,7 @@ namespace bmc {
     i = OPT_NUMBER_OF_RAY_PER_BEAM;
     while(i--) {
       if (
-        #if OPT_BEAM_MASK != 0xFF && OPT_BEAM_MASK != 0xFFFF && OPT_BEAM_MASK != 0xFFFFFFFF && OPT_BEAM_MASK != 0xFFFFFFFFFFFFFFFF
+        #if OPT_BEAM_MASK != 0xFFFFFFFF && OPT_BEAM_MASK != 0xFFFFFFFFFFFFFFFF
         !((1 << i) & OPT_BEAM_MASK) || 
         #endif
         (_.colorChecker & (OPT_COLOR_CHECKER_ENCODING(1) << i))) {
@@ -280,12 +280,12 @@ namespace bmc {
       _offset = (_.iray.x >> _.bmc->rlevel) |
         ((_.iray.y >> _.bmc->rlevel) << _.bmc->yBitOffset) |
         ((_.iray.z >> _.bmc->rlevel) << _.bmc->zBitOffset);
-        
-
+      
       _color = _.bmc->region[_offset];
       
       if (_color) {
         _buffer[_.o[i]] = getDepthColor(_color);
+
         #if OPT_USE_COLLIDE != 0
         if(_.collide) {
           fadeToColor(&_buffer[_.o[i]], _buffer[_.o[i]], 0xFF, 0.86f);
@@ -296,7 +296,7 @@ namespace bmc {
     }
     return;
   }
-   
+  
   static u8 _originToFind[OPT_NUMBER_OF_ORIGIN_TO_FIND] __attribute__((aligned(16))) = {0};
   static inline void originFound() {
     calcBase();
@@ -360,17 +360,17 @@ namespace bmc {
         }
       }
       _.rayLength += _.bmc->lstep;
-    } while(_.rayLength < OPT_MAX_RAY_DEPTH);
+      
+    } while(_.rayLength < OPT_RAY_MAX_DEPTH);
   }
 
   
   void getRendering(ucb* const buffer, SpacePov* const pov) {
     _buffer = buffer;
-
+    
     _.position = pov->position;
     _.pov = pov::getPov(pov->vstep, pov->hstep);
     _.rayStep = mth::getNormalized4(mth::getSandwichProduct({0.0f, 0.0f, 1.0f, 0.0f}, _.pov->q));
-    
     
     u32 i = 0;
     while(i < OFFSET_CELL_NUMBER) {
@@ -392,9 +392,9 @@ namespace bmc {
         i++;
       }
     }
-    RAY_COLOR_DEPTH_START = (OPT_MAX_RAY_DEPTH / 8.0f) * OPT_RAY_COLOR_DEPTH_FACTOR;
+    RAY_COLOR_DEPTH_START = (OPT_RAY_MAX_DEPTH / 8.0f) * OPT_RAY_COLOR_DEPTH_FACTOR;
     MAX_SPACE_LEVEL = mth::getPO2(OPT_SPACE_SIZE);
-    COLOR_DEPTH_STEP = (1.0f / (OPT_MAX_RAY_DEPTH - RAY_COLOR_DEPTH_START));
+    COLOR_DEPTH_STEP = (1.0f / (OPT_RAY_MAX_DEPTH - RAY_COLOR_DEPTH_START));
   }
   
   u8 loadVoxelFrom(const char* const filename) {

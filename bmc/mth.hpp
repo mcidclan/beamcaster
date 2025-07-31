@@ -103,6 +103,16 @@ namespace mth {
     };
   }
   
+  inline v3 normalize(const v3& v) {
+    const float norm = sqrtf(v.x * v.x + v.y * v.y + v.z * v.z);
+    if (norm < 1e-8f) {
+      return v;
+    }
+    return {
+      v.x / norm, v.y / norm, v.z / norm
+    };
+  }
+  
   template<typename T>
   v3 tov3(const T v) {
     return {

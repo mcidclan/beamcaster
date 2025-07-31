@@ -38,30 +38,35 @@ constexpr unsigned int OPT_FRAME_BUFFER_SIZE =  OPT_FRAME_SIZE * OPT_FRAME_SIZE;
 #define OPT_RAY_STEP_FACTOR                     0.7f
 #define OPT_RAY_MIN_STEP                        1.0f
 
-#define OPT_RAY_DEPTH_SCALE                     0.00001f
+#define OPT_USE_ADAPTATIVE_STEP                      1
+#define OPT_RAY_ADAPTATIVE_STEP_MIN_VALUE            0.2f
+#define OPT_RAY_ADAPTATIVE_STEP_LENGTH               30.0f
+constexpr float OPT_RAY_ADAPTATIVE_STEP_INV_LENGTH =  1.0f / OPT_RAY_ADAPTATIVE_STEP_LENGTH;
+
+#define OPT_RAY_DEPTH_SCALE                     0.000005f
 #define OPT_RAY_BASE                            0.0f
 #define OPT_RAY_BASE_CUT                        30.0f
 constexpr float OPT_RAY_MAX_DEPTH            =  90.0f + OPT_RAY_BASE_CUT;
 
 #define OPT_ORIGIN_SCALE                        1.0f
-#define OPT_NEAR_PLANE                          60.0f
-
-#define OPT_USE_BARREL_DISTORTION               1
-#define OPT_BARREL_DISTORTION_FACTOR            0.0001f
-
-#define OPT_USE_SPHERICAL_DISTORTION            1
-#define OPT_SPHERICAL_DISTORTION_INTENSITY      0.15f
-#define OPT_SPHERICAL_DISTORTION_FACTOR         256.0f
+#define OPT_NEAR_PLANE                          180.0f
 
 #define OPT_USE_LENS_DISTORTION                 0
-#define OPT_LENS_DISTORTION_FACTOR              0.001f
+#define OPT_LENS_DISTORTION_FACTOR              0.0f
+
+#define OPT_USE_SPHERICAL_DISTORTION            1
+#define OPT_SPHERICAL_DISTORTION_INTENSITY      0.4f
+#define OPT_SPHERICAL_DISTORTION_FACTOR         256.0f
+
+#define OPT_USE_BARREL_DISTORTION               1
+#define OPT_BARREL_DISTORTION_FACTOR            0.000005f
 
 #define OPT_RAY_COLOR_DEPTH_FACTOR              4.0f
 
 // Voxel limit
 #define OPT_USE_VOXEL_SPHERICAL_LIMIT                   0
 #define OPT_VOXEL_SPHERICAL_LIMIT_VALUE                 0.6f
-constexpr float OPT_VOXEL_SPHERICAL_LIMITS_RAY_LENGTH = OPT_RAY_MAX_DEPTH / 4.0f;
+constexpr float OPT_VOXEL_SPHERICAL_LIMITS_RAY_LENGTH = OPT_RAY_MAX_DEPTH / 1.0f;
 
 // Beam parameters 64 pixels
 #define OPT_BEAM_MASK                           0xFFFFFFFFFFFFFFFF
@@ -85,7 +90,7 @@ constexpr float OPT_VOXEL_SPHERICAL_LIMITS_RAY_LENGTH = OPT_RAY_MAX_DEPTH / 4.0f
 // 2d rendering
 #define OPT_GRID_WIDTH                          8
 #define OPT_GRID_HEIGHT                         8
-#define OPT_H_SCISSOR                           12
+#define OPT_H_SCISSOR                           14
 #define OPT_V_SCISSOR_START                     0 // 4
 #define OPT_V_SCISSOR_END                       0 // 4
 #define OPT_V_DISPLACEMENT                      0 // -32

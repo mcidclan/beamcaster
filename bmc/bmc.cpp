@@ -201,11 +201,11 @@ namespace bmc {
         #elif OPT_USE_SPHERICAL_DISTORTION == 1
         const float dist = sqrtf(origin->x*origin->x + origin->y*origin->y + origin->z*origin->z);
         if (dist > 0.001f) {
-            const float distortion_factor = 1.0f + (dist * OPT_SPHERICAL_DISTORTION_FACTOR);
+            const float distortionFactor = 1.0f + (dist * OPT_SPHERICAL_DISTORTION_FACTOR);
             const v3 distortion = {
-                (origin->x / dist) * distortion_factor,
-                (origin->y / dist) * distortion_factor,
-                (origin->z / dist) * distortion_factor
+                (origin->x / dist) * distortionFactor,
+                (origin->y / dist) * distortionFactor,
+                (origin->z / dist) * distortionFactor
             };
             origin->x = origin->x * (1.0f - OPT_SPHERICAL_DISTORTION_INTENSITY) + distortion.x * OPT_SPHERICAL_DISTORTION_INTENSITY;
             origin->y = origin->y * (1.0f - OPT_SPHERICAL_DISTORTION_INTENSITY) + distortion.y * OPT_SPHERICAL_DISTORTION_INTENSITY;
@@ -214,9 +214,9 @@ namespace bmc {
         #endif
         
         #if OPT_USE_BARREL_DISTORTION == 1
-        const float distance_from_center = sqrtf(origin->x*origin->x + origin->y*origin->y);
-        const float depth_factor = 1.0f - distance_from_center * OPT_BARREL_DISTORTION_FACTOR;
-        origin->z *= depth_factor;
+        const float distanceFromCenter = sqrtf(origin->x*origin->x + origin->y*origin->y);
+        const float depthFactor = 1.0f - distanceFromCenter * OPT_BARREL_DISTORTION_FACTOR;
+        origin->z *= depthFactor;
         #endif
         
         i++;
@@ -227,9 +227,9 @@ namespace bmc {
   
   static inline void calcBase(void) {
     _.rayBase = OPT_RAY_DEPTH_SCALE * sqrtf(_.rayLength*_.rayLength*_.rayLength) + OPT_RAY_BASE; // powf(x, 1.5f)
-    _.r.x = _.rayLength * _.rayStep.x + _.position.x;
-    _.r.y = _.rayLength * _.rayStep.y + _.position.y;
-    _.r.z = _.rayLength * _.rayStep.z + _.position.z;
+    _.r.x = _.rayStep.x + _.position.x;
+    _.r.y = _.rayStep.y + _.position.y;
+    _.r.z = _.rayStep.z + _.position.z;
   }
   
   static inline void evalBeamStep() {
@@ -355,7 +355,22 @@ namespace bmc {
           return;
         }
       }
+      
+      #if OPT_USE_ADAPTATIVE_STEP != 0
+      float t = fminf((_.rayLength - OPT_RAY_BASE_CUT) * OPT_RAY_ADAPTATIVE_STEP_INV_LENGTH, 1.0f);
+      t = fmaxf(OPT_RAY_ADAPTATIVE_STEP_MIN_VALUE,
+        #if OPT_USE_ADAPTATIVE_STEP == 1
+        t
+        #elif OPT_USE_ADAPTATIVE_STEP == 2
+        t * t
+        #else
+        t * t * t
+        #endif
+      );
+      _.rayLength += _.bmc->lstep * t;
+      #else
       _.rayLength += _.bmc->lstep;
+      #endif
       
     } while(_.rayLength < OPT_RAY_MAX_DEPTH);
   }

@@ -37,10 +37,12 @@ constexpr unsigned int OPT_FRAME_BUFFER_SIZE =  OPT_FRAME_SIZE * OPT_FRAME_SIZE;
 // Ray behavior
 #define OPT_RAY_STEP_FACTOR                     0.7f
 #define OPT_RAY_MIN_STEP                        1.0f
-#define OPT_RAY_MAX_DEPTH                       120.0f
-#define OPT_RAY_BASE                            0.0f /*0.00025f*/
-#define OPT_RAY_BASE_CUT                        30.0f /*10.0f*/
+
 #define OPT_RAY_DEPTH_SCALE                     0.00001f
+#define OPT_RAY_BASE                            0.0f
+#define OPT_RAY_BASE_CUT                        30.0f
+constexpr float OPT_RAY_MAX_DEPTH            =  90.0f + OPT_RAY_BASE_CUT;
+
 #define OPT_ORIGIN_SCALE                        1.0f
 #define OPT_NEAR_PLANE                          60.0f
 

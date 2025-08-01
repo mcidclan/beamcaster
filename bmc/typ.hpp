@@ -87,6 +87,7 @@ struct Tracer {
   v3 coordinates;
   float rayBase;
   float rayLength;
+  float prevStep;
   #if OPT_NUMBER_OF_RAY_PER_BEAM != 64
   u32 colorChecker;
   #endif

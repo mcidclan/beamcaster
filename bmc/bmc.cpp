@@ -324,7 +324,8 @@ namespace bmc {
           _.found = 1;
         }
         _.level++;
-        _.rayLength -= _.bmc->lstep;
+        _.rayLength -= _.prevStep;
+        // _.rayLength -= _.bmc->lstep;
         _.bmc = stack[_.level];
         return;
       }
@@ -344,10 +345,11 @@ namespace bmc {
     _.found = 0;
     _.level = OPT_BOOST_LEVEL;
     _.bmc = stack[_.level];
-    
+    _.prevStep = 0.0f;
     do {
       if(!_.found) {
         originFound();
+        _.prevStep = _.bmc->lstep;
       }
       if(_.found) {
         evalBeamStep();

@@ -90,7 +90,7 @@ constexpr float OPT_VOXEL_SPHERICAL_LIMITS_RAY_LENGTH = OPT_RAY_MAX_DEPTH / 1.0f
 // 2d rendering
 #define OPT_GRID_WIDTH                          8
 #define OPT_GRID_HEIGHT                         8
-#define OPT_H_SCISSOR                           14
+#define OPT_H_SCISSOR                           12
 #define OPT_V_SCISSOR_START                     0 // 4
 #define OPT_V_SCISSOR_END                       0 // 4
 #define OPT_V_DISPLACEMENT                      0 // -32

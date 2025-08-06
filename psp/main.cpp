@@ -118,8 +118,8 @@ int main() {
     sceCtrlPeekBufferPositive(&pad, 1);
     sceRtcGetCurrentTick(&prev);
 
-    //ucb* const drawbuffer = ((ucb*)(VRAM_BASE + frameOffset - OPT_FRAME_SIZE*120*sizeof(ucb)));
-    getView((ucb*)VRAM_BASE);
+    ucb* const drawbuffer = ((ucb*)(VRAM_BASE + frameOffset - OPT_FRAME_SIZE*120*sizeof(ucb)));
+    getView(drawbuffer);
     
     sceRtcGetCurrentTick(&now);
     fps = tickResolution / (now - prev);

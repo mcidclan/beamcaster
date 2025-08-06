@@ -19,7 +19,7 @@ constexpr float OPT_DEFAULT_CAM_ANGLE_Y      =  OPT_POV_RANGE / 2.0f;
 #define OPT_SPACE_BUFFER_SIZE                   16777216
 
 // Frame size parameters
-#define OPT_HALF_FRAME_SIZE                     256
+#define OPT_HALF_FRAME_SIZE                     128
 constexpr unsigned int OPT_FRAME_SIZE        =  OPT_HALF_FRAME_SIZE * 2;
 constexpr unsigned int OPT_FRAME_SIZE_X2     =  OPT_FRAME_SIZE * 2;
 constexpr unsigned int OPT_FRAME_SIZE_X3     =  OPT_FRAME_SIZE * 3;
@@ -86,12 +86,12 @@ constexpr float OPT_VOXEL_SPHERICAL_LIMITS_RAY_LENGTH = OPT_RAY_MAX_DEPTH / 1.0f
 #define OPT_NUMBER_OF_ORIGIN_TO_FIND            4
 #define OPT_ORIGIN_MASK                         0b00001000000000011000000000010000
 */
-#define OPT_BOOST_LEVEL                         6
+#define OPT_BOOST_LEVEL                         4
 
 // 2d rendering
 #define OPT_GRID_WIDTH                          8
 #define OPT_GRID_HEIGHT                         8
-#define OPT_H_SCISSOR                           18
-#define OPT_V_SCISSOR_START                     4
-#define OPT_V_SCISSOR_END                       4
-#define OPT_V_DISPLACEMENT                      -32
+#define OPT_H_SCISSOR                           8
+#define OPT_V_SCISSOR_START                     0
+#define OPT_V_SCISSOR_END                       0
+#define OPT_V_DISPLACEMENT                      0

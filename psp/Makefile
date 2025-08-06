@@ -11,7 +11,7 @@ CFLAGS = -Wno-narrowing -g0 -Wall \
          -funroll-loops \
          -I$(PSPSDK)/../include \
          -DM_PI=3.1415927f -DPSP \
-         -DUSE_RAND_16BITS -fno-exceptions \
+         -fno-exceptions \
          -DMEM_ALIGN=$(MEM_ALIGN) \
          -falign-functions=$(MEM_ALIGN) \
          -fomit-frame-pointer \
@@ -25,9 +25,7 @@ CFLAGS = -Wno-narrowing -g0 -Wall \
          
 CXXFLAGS = $(CFLAGS) -fno-rtti -std=c++11
 PSPBIN = $(PSPSDK)/../bin
-LIBS += -lstdc++ -lm -lpspgum -lpspgu -lpspgum_vfpu -lpspgu \
-        -lpthread-psp -lpsphprm -lz -lpspvfpu -lpsprtc \
-        -lpsppower
+LIBS += -lstdc++ -lpsppower -lpspgu
 
 PSP_FW_VERSION=660
 PSP_LARGE_MEMORY=1

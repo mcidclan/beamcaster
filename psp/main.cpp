@@ -6,7 +6,8 @@
 #include <psprtc.h>
 #include <psppower.h>
 #include <pspdisplay.h>
-  
+#include <pspgu.h>
+
 #include "../bmc/bmc.hpp"
 
 PSP_MODULE_INFO("beamcaster", 0, 1, 0);
@@ -87,23 +88,17 @@ static inline void getView(ucb* const frame) {
   bmc::getRendering(frame, &pov);
 }
 
-u32 frameOffset = 0;
 constexpr u32 VRAM_BASE = 0x44000000;
-
-void updateFrameBuffer() {
-  sceDisplaySetFrameBuf((u32*)(VRAM_BASE + frameOffset),
-    512, PSP_DISPLAY_PIXEL_FORMAT_565, PSP_DISPLAY_SETBUF_NEXTFRAME);
-  if(!frameOffset) {
-    frameOffset = 512*512*sizeof(ucb);
-  } else {
-    frameOffset = 0;
-  }
-}
+static unsigned int __attribute__((aligned(16))) list[1024] = {0};
 
 int main() {
-  updateFrameBuffer();
   scePowerSetClockFrequency(333, 333, 166);
-  pspDebugScreenInitEx(NULL, PSP_DISPLAY_PIXEL_FORMAT_565, 0);
+  
+  sceGuInit();
+  pspDebugScreenInitEx(0x0, PSP_DISPLAY_PIXEL_FORMAT_565, 0);
+  sceDisplaySetFrameBuf((void*)VRAM_BASE, 512,
+  PSP_DISPLAY_PIXEL_FORMAT_565, PSP_DISPLAY_SETBUF_NEXTFRAME);
+
   pspDebugScreenSetXY(1, 1);
   pspDebugScreenSetTextColor(0xFF00A0FF);
   pspDebugScreenPrintf("init...");
@@ -114,42 +109,30 @@ int main() {
   pov::init();
   pspDebugScreenSetXY(1, 1);
   pspDebugScreenPrintf("                                                     ");
+  
+  ucb* const drawbuffer = (ucb*)(VRAM_BASE + 512*512*sizeof(ucb));
+  
   do {
     sceCtrlPeekBufferPositive(&pad, 1);
     sceRtcGetCurrentTick(&prev);
-
-    ucb* const drawbuffer = ((ucb*)(VRAM_BASE + frameOffset - OPT_FRAME_SIZE*120*sizeof(ucb)));
+    
     getView(drawbuffer);
     
+    sceGuStart(GU_DIRECT, list);
+    sceGuCopyImage(GU_PSM_5650, 0, 0, OPT_FRAME_SIZE, OPT_FRAME_SIZE, OPT_FRAME_SIZE, (void*)drawbuffer,
+      112, 8, 512, (void*)(VRAM_BASE));
+    sceGuFinish();
+    sceGuSync(0,0);
+
     sceRtcGetCurrentTick(&now);
     fps = tickResolution / (now - prev);
     
-    pspDebugScreenSetOffset(frameOffset);
     pspDebugScreenSetXY(1, 1);
     pspDebugScreenPrintf("Fps: %llu    ", fps);
-
     sceDisplayWaitVblankStart();
-    updateFrameBuffer();
   } while(!(pad.Buttons & PSP_CTRL_SELECT));
 
   sceKernelExitGame();
   return 0;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

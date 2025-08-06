@@ -1,37 +1,155 @@
-// wip
+#include <pspkernel.h>
+#include <pspctrl.h>
+#include <malloc.h>
+#include <stdio.h>
+#include <string.h>
+#include <psprtc.h>
+#include <psppower.h>
+#include <pspdisplay.h>
+  
+#include "../bmc/bmc.hpp"
 
-PSP_MODULE_INFO("beamcaster", 0, 1, 1);
+PSP_MODULE_INFO("beamcaster", 0, 1, 0);
+PSP_MAIN_THREAD_ATTR(THREAD_ATTR_USER | THREAD_ATTR_VFPU);
 PSP_HEAP_SIZE_KB(-1024);
-PSP_MAIN_THREAD_ATTR(PSP_THREAD_ATTR_VFPU | PSP_THREAD_ATTR_USER);
 
-static unsigned int __attribute__((aligned(16))) list[1024] = {0};
+#if OPT_USE_COLLIDE
+static u8 canMove(const Vec3<i16>* const p) {
+  if(p->x < 0 || p->x >= OPT_SPACE_SIZE ||
+    p->y < 0 || p->y >= OPT_SPACE_SIZE ||
+    p->z < 0 || p->z >= OPT_SPACE_SIZE) {
+    return 1;
+  }
+  static u32 offset;
+  static ucb color;
+  offset = (p->x >> bmc::_.space->rlevel) |
+    ((p->y >> bmc::_.space->rlevel) << bmc::_.space->yBitOffset) |
+    ((p->z >> bmc::_.space->rlevel) << bmc::_.space->zBitOffset);
+  color = bmc::_.space->region[offset];
+  return (color & 1 << 5) || color == 0;
+}
+#endif
 
+SceCtrlData pad;
+static float dstep = OPT_CAM_STEP;
+static inline void getView(ucb* const frame) {
+  static v3 position = OPT_DEFAULT_CAM_POSITION;
+  static float ax = OPT_DEFAULT_CAM_ANGLE_X;
+  static float ay = OPT_DEFAULT_CAM_ANGLE_Y;
+  
+  SpacePov pov = { 0.0f, ax, ay, position };
 
-sceGuStart(GU_DIRECT, list);
-sceGuCopyImage(GU_PSM_5650, 0, 0, 480, 272, STRIDE, (void*)DST_BUFFER_565,
-  0, 0, 512, (void*)(UNCACHED_USER_MASK | GE_EDRAM_BASE));
-sceGuFinish();
-sceGuSync(0,0);
+  #if OPT_USE_COLLIDE == 1
+  static v3 _position = position;
+  if (pad.Buttons & PSP_CTRL_TRIANGLE) {
+    _iposition.x = position.x;
+    _position.x = position.x + bmc::_.rayStep.x * dstep;
+    _iposition.y = position.y;
+    _position.y = position.y + bmc::_.rayStep.y * dstep;
+    _iposition.z = position.z;
+    _position.z = position.z + bmc::_.rayStep.z * dstep;
+  }
+
+  if (pad.Buttons & PSP_CTRL_CROSS) {
+    _iposition.x = position.x;
+    _position.x = position.x - bmc::_.rayStep.x * dstep;
+    _iposition.y = position.y;
+    _position.y = position.y - bmc::_.rayStep.y * dstep;
+    _iposition.z = position.z;
+    _position.z = position.z - bmc::_.rayStep.z * dstep;
+  }
+
+  bmc::_.collide = 0;
+  if (canMove(&_iposition) && canMove(&_position)) {
+    position = _position;
+  } else {
+    bmc::_.collide = 1;
+  }
+  #else
+  if (pad.Buttons & PSP_CTRL_TRIANGLE) {
+    position.x += bmc::_.rayStep.x * dstep;
+    position.y += bmc::_.rayStep.y * dstep;
+    position.z += bmc::_.rayStep.z * dstep;
+  }
+  
+  if (pad.Buttons & PSP_CTRL_CROSS) {
+    position.x -= bmc::_.rayStep.x * dstep;
+    position.y -= bmc::_.rayStep.y * dstep;
+    position.z -= bmc::_.rayStep.z * dstep;
+  }
+  #endif
+
+  if (pad.Buttons & PSP_CTRL_LEFT) ay = (ay - 1) < 0 ? OPT_POV_RANGE - 1 : ay - 1;
+  if (pad.Buttons & PSP_CTRL_RIGHT) ay = (ay + 1) >= OPT_POV_RANGE ? 0 : ay + 1;
+  if (pad.Buttons & PSP_CTRL_DOWN) ax = (ax - 1) < 0 ? OPT_POV_RANGE - 1 : ax - 1;
+  if (pad.Buttons & PSP_CTRL_UP) ax = (ax + 1) >= OPT_POV_RANGE ? 0 : ax + 1;
+  
+  bmc::getRendering(frame, &pov);
+}
+
+u32 frameOffset = 0;
+constexpr u32 VRAM_BASE = 0x44000000;
+
+void updateFrameBuffer() {
+  sceDisplaySetFrameBuf((u32*)(VRAM_BASE + frameOffset),
+    512, PSP_DISPLAY_PIXEL_FORMAT_565, PSP_DISPLAY_SETBUF_NEXTFRAME);
+  if(!frameOffset) {
+    frameOffset = 512*512*sizeof(ucb);
+  } else {
+    frameOffset = 0;
+  }
+}
 
 int main() {
+  updateFrameBuffer();
   scePowerSetClockFrequency(333, 333, 166);
-
-  sceGuInit();
-  pspDebugScreenInitEx(0x0, PSP_DISPLAY_PIXEL_FORMAT_8888, 0);
-  sceDisplaySetFrameBuf((void*)(UNCACHED_USER_MASK | GE_EDRAM_BASE),
-    512, PSP_DISPLAY_PIXEL_FORMAT_8888, PSP_DISPLAY_SETBUF_NEXTFRAME);
+  pspDebugScreenInitEx(NULL, PSP_DISPLAY_PIXEL_FORMAT_565, 0);
+  pspDebugScreenSetXY(1, 1);
+  pspDebugScreenSetTextColor(0xFF00A0FF);
+  pspDebugScreenPrintf("init...");
+  u64 prev, now, fps = 0;
+  const u64 tickResolution = sceRtcGetTickResolution();
   
-  pspDebugScreenClear();
-  SceCtrlData ctl;
+  bmc::init();
+  pov::init();
+  pspDebugScreenSetXY(1, 1);
+  pspDebugScreenPrintf("                                                     ");
   do {
-    sceCtrlPeekBufferPositive(&ctl, 1);
-    //
+    sceCtrlPeekBufferPositive(&pad, 1);
+    sceRtcGetCurrentTick(&prev);
+
+    //ucb* const drawbuffer = ((ucb*)(VRAM_BASE + frameOffset - OPT_FRAME_SIZE*120*sizeof(ucb)));
+    getView((ucb*)VRAM_BASE);
+    
+    sceRtcGetCurrentTick(&now);
+    fps = tickResolution / (now - prev);
+    
+    pspDebugScreenSetOffset(frameOffset);
+    pspDebugScreenSetXY(1, 1);
+    pspDebugScreenPrintf("Fps: %llu    ", fps);
+
     sceDisplayWaitVblankStart();
-  } while(!(ctl.Buttons & PSP_CTRL_HOME));
-  
-  pspDebugScreenClear();
-  pspDebugScreenPrintf("Exiting...");
-  sceKernelDelayThread(500000);
+    updateFrameBuffer();
+  } while(!(pad.Buttons & PSP_CTRL_SELECT));
+
   sceKernelExitGame();
   return 0;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

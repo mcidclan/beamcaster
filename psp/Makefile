@@ -15,7 +15,7 @@ CFLAGS = -Wno-narrowing -g0 -Wall \
          -DMEM_ALIGN=$(MEM_ALIGN) \
          -falign-functions=$(MEM_ALIGN) \
          -fomit-frame-pointer \
-         -Ofast \
+         -Ofast -DBEAM_CONFIG_PSP \
          -ffunction-sections \
          -fdata-sections \
          -fno-unwind-tables \

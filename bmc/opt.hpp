@@ -1,6 +1,7 @@
 #pragma once
-#ifndef PSP
+#ifdef BEAM_CONFIG_GENERIC
 #include "./config/generic.hpp"
-#else
+#elif defined(BEAM_CONFIG_PSP)
 #include "./config/psp.hpp"
 #endif
+

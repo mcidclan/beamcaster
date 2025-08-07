@@ -2,7 +2,7 @@
 #include "./pov.hpp"
 namespace bmc {
   extern Tracer _;
-  void init();
+  int init();
   void initExtra();
   void updateParameters();
   void getRendering(ucb* const, SpacePov* const);

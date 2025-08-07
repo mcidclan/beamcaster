@@ -15,13 +15,14 @@ CFLAGS = -Wno-narrowing -g0 -Wall \
          -DMEM_ALIGN=$(MEM_ALIGN) \
          -falign-functions=$(MEM_ALIGN) \
          -fomit-frame-pointer \
-         -Ofast \
+         -O3 -DBEAM_CONFIG_GENERIC \
          -ffunction-sections \
          -fdata-sections \
          -fno-unwind-tables \
          -fno-asynchronous-unwind-tables \
          -flto \
-         -fmerge-all-constants
+         -fmerge-all-constants \
+         -march=native -Wl,--gc-sections
 
 CXXFLAGS = $(CFLAGS) -fno-rtti -std=c++11
 

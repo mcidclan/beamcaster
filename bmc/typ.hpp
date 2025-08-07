@@ -56,6 +56,7 @@ struct Pov {
 
 struct BMC {
   float lstep;
+  float voxInvSize;
   u32 frame_sizeDigitsX;
   u32 frame_sizeDigitsY;
   u32 frame_sizeDigitsZ;
@@ -78,33 +79,34 @@ struct BMC {
 } __attribute__((packed, aligned(MEM_ALIGN)));
 
 struct Tracer {
-  #if OPT_NUMBER_OF_RAY_PER_BEAM == 64
-  u64 colorChecker;
-  #endif
   v4 rayStep;
   v3 coords[OPT_NUMBER_OF_RAY_PER_BEAM];
   v3 position;
   v3 coordinates;
-  float rayBase;
-  float rayLength;
-  float prevStep;
-  #if OPT_NUMBER_OF_RAY_PER_BEAM != 64
+  float rayBase; //
+  float rayLength; //
+  #if OPT_NUMBER_OF_RAY_PER_BEAM == 64
+  u64 colorChecker;
+  #else
   u32 colorChecker;
-  #endif
+  #endif  
   u32* o;
   Pov* pov;
   BMC* bmc;
   BMC* space;
-  v3 ray;
-  v3 r;
-  struct {
-    Vec3<u16> iray;
-    u8 level;
-    u8 found;
-  } __attribute__((packed, aligned(MEM_ALIGN)));
   #if OPT_USE_COLLIDE
   struct {
     u8 collide;
   } __attribute__((packed, aligned(MEM_ALIGN)));
   #endif
 } __attribute__((packed, aligned(MEM_ALIGN)));
+
+struct Trace {
+  v3 ray;
+  v3 rayDir;
+  float prevStep;
+  Vec3<u16> iray;
+  u8 level;
+  u8 found;
+} __attribute__((packed, aligned(MEM_ALIGN)));
+

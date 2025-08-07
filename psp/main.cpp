@@ -105,7 +105,13 @@ int main() {
   u64 prev, now, fps = 0;
   const u64 tickResolution = sceRtcGetTickResolution();
   
-  bmc::init();
+  if (bmc::init() < 0) {
+    pspDebugScreenSetXY(1, 1);
+    pspDebugScreenPrintf("No voxels file found!");
+    sceKernelDelayThread(1000000);
+    sceKernelExitGame();
+  }
+  
   pov::init();
   pspDebugScreenSetXY(1, 1);
   pspDebugScreenPrintf("                                                     ");

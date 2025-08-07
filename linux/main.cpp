@@ -210,7 +210,9 @@ int main() {
     return -1;
   }
 
-  bmc::init();
+  if (bmc::init() < 0) {
+    fprintf(stderr, "No voxels file not found!\n");
+  }
   pov::init();
 
   framebufferSizeCallback(window, OPT_FRAME_SIZE, OPT_FRAME_SIZE);

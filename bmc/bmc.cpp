@@ -274,7 +274,7 @@ namespace bmc {
         trace.ray.x < 0.0f || trace.ray.x >= OPT_SPACE_SIZE ||
         trace.ray.y < 0.0f || trace.ray.y >= OPT_SPACE_SIZE ||
         trace.ray.z < 0.0f || trace.ray.z >= OPT_SPACE_SIZE) {
-        continue;
+        return;
       }
       
       trace.iray.x = static_cast<u16>(trace.ray.x);
@@ -315,7 +315,7 @@ namespace bmc {
         trace.ray.x < 0.0f || trace.ray.x >= OPT_SPACE_SIZE ||
         trace.ray.y < 0.0f || trace.ray.y >= OPT_SPACE_SIZE ||
         trace.ray.z < 0.0f || trace.ray.z >= OPT_SPACE_SIZE) {
-        continue;
+        return;
       }
       trace.iray.x = static_cast<u16>(trace.ray.x); 
       trace.iray.y = static_cast<u16>(trace.ray.y); 

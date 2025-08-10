@@ -39,7 +39,7 @@ constexpr unsigned int OPT_FRAME_BUFFER_SIZE =  OPT_FRAME_SIZE * OPT_FRAME_SIZE;
 
 // Ray behavior
 #define OPT_RAY_DEPTH_SCALE                     0.00008f
-#define OPT_RAY_BASE                            0.01f
+#define OPT_RAY_BASE                            0.006f
 #define OPT_RAY_BASE_CUT                        10.0f
 constexpr float OPT_RAY_MAX_DEPTH            =  60.0f + OPT_RAY_BASE_CUT;
 
@@ -50,13 +50,13 @@ constexpr float OPT_RAY_MAX_DEPTH            =  60.0f + OPT_RAY_BASE_CUT;
 #define OPT_LENS_DISTORTION_FACTOR              0.0f
 
 #define OPT_USE_SPHERICAL_DISTORTION            1
-#define OPT_SPHERICAL_DISTORTION_INTENSITY      0.05f
+#define OPT_SPHERICAL_DISTORTION_INTENSITY      0.07f
 #define OPT_SPHERICAL_DISTORTION_FACTOR         256.0f
 
 #define OPT_USE_BARREL_DISTORTION               1
-#define OPT_BARREL_DISTORTION_FACTOR            0.00006f
+#define OPT_BARREL_DISTORTION_FACTOR            0.00008f
 
-#define OPT_RAY_COLOR_DEPTH_FACTOR              4.0f
+#define OPT_RAY_COLOR_DEPTH_FACTOR              5.0f
 
 /*
 // Beam parameters 64 pixels
@@ -75,7 +75,7 @@ constexpr float OPT_RAY_MAX_DEPTH            =  60.0f + OPT_RAY_BASE_CUT;
 #define OPT_ORIGIN_MASK                         0b00001000000000011000000000010000
 
 // Region's level control
-#define OPT_BOOST_LEVEL                         6
+#define OPT_BOOST_LEVEL                         4
 #define OPT_MAX_DETAIL_LEVEL                    8
 
 // 2d rendering
